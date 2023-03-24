@@ -122,7 +122,7 @@ class AbstractSustain(ABC):
 
         ml_sequence_prev_EM                 = []
         ml_f_prev_EM                        = []
-
+        samples_likelihoods = np.zeros((self.N_iterations_MCMC, self.N_S_max))
         pickle_dir                          = os.path.join(self.output_folder, 'pickle_files')
         if not os.path.isdir(pickle_dir):
             os.mkdir(pickle_dir)
@@ -154,7 +154,7 @@ class AbstractSustain(ABC):
 
                 pickle_file.close()
             else:
-                print("Failed to find pickle file: " + pickle_filename_s + ". Running SuStaIn model for " + str(s) + " subtype.")
+                print("Failed to find pickle file: " + pickle_filename_s + ". Running SuStaIn model for " + str(s+1) + " subtype(s).")
 
                 ml_sequence_EM,     \
                 ml_f_EM,            \
@@ -174,7 +174,8 @@ class AbstractSustain(ABC):
                 samples_likelihood          = self._estimate_uncertainty_sustain_model(self.__sustainData, seq_init, f_init)           #self.__estimate_uncertainty_sustain_model(self.__data, seq_init, f_init)
                 ml_sequence_prev_EM         = ml_sequence_EM
                 ml_f_prev_EM                = ml_f_EM
-
+            samples_likelihoods[:, s] = samples_likelihood[:, 0]
+            
             # max like subtype and stage / subject
             N_samples                       = 1000
             ml_subtype,             \
@@ -217,7 +218,7 @@ class AbstractSustain(ABC):
             self._plot_subtype_order        = np.argsort(ml_f_EM)[::-1]
             #order of biomarkers in each subtypes' positional variance diagram
             self._plot_biomarker_order      = ml_sequence_EM[self._plot_subtype_order[0], :].astype(int)
-
+            
             # plot results
             if plot:
                 figs, ax = self._plot_sustain_model(
@@ -235,14 +236,14 @@ class AbstractSustain(ABC):
 
                 ax0.plot(range(self.N_iterations_MCMC), samples_likelihood, label="Subtype " + str(s+1))
 
-        # save and show this figure after all subtypes have been calculcated
+        # save and show this figure after all subtypes have been calculated
         if plot:
             ax0.legend(loc='upper right')
             fig0.tight_layout()
             fig0.savefig(Path(self.output_folder) / f"MCMC_likelihoods.{plot_format}", bbox_inches='tight')
             fig0.show()
-
-        return samples_sequence, samples_f, ml_subtype, prob_ml_subtype, ml_stage, prob_ml_stage, prob_subtype_stage
+        
+        return samples_sequence, samples_f, ml_subtype, prob_ml_subtype, ml_stage, prob_ml_stage, prob_subtype_stage, samples_likelihoods, fig0
 
 
     def cross_validate_sustain_model(self, test_idxs, select_fold = [], plot=False):
