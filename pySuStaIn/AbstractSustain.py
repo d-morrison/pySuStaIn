@@ -243,7 +243,7 @@ class AbstractSustain(ABC):
             fig0.savefig(Path(self.output_folder) / f"MCMC_likelihoods.{plot_format}", bbox_inches='tight')
             fig0.show()
         
-        return samples_sequence, samples_f, ml_subtype, prob_ml_subtype, ml_stage, prob_ml_stage, prob_subtype_stage, samples_likelihoods, fig0
+        return samples_sequence, samples_f, ml_subtype, prob_ml_subtype, ml_stage, prob_ml_stage, prob_subtype_stage, samples_likelihoods
 
 
     def cross_validate_sustain_model(self, test_idxs, select_fold = [], plot=False):

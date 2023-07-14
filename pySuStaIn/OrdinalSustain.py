@@ -439,6 +439,8 @@ class OrdinalSustain(AbstractSustain):
 
     @staticmethod
     def plot_positional_var(samples_sequence, samples_f, n_samples, score_vals, biomarker_labels=None, ml_f_EM=None, cval=False, subtype_order=None, biomarker_order=None, title_font_size=12, stage_font_size=10, stage_label='SuStaIn Stage', stage_rot=0, stage_interval=1, label_font_size=10, label_rot=0, cmap="original", biomarker_colours=None, figsize=None, subtype_titles=None, separate_subtypes=False, save_path=None, save_kwargs={}):
+        verbose = 0
+        if verbose > 0: print('n_samples = ', n_samples)
         # Get the number of subtypes
         N_S = samples_sequence.shape[0]
         # Get the number of features/biomarkers
@@ -447,23 +449,38 @@ class OrdinalSustain(AbstractSustain):
         if biomarker_labels is not None:
             assert len(biomarker_labels) == N_bio
         # Set subtype order if not given
+        if verbose > 0: print("initial subtype_order = ", subtype_order)
         if subtype_order is None:
             # Determine order if info given
+            if verbose > 0: print("ml_f_EM = ", ml_f_EM)
             if ml_f_EM is not None:
                 subtype_order = np.argsort(ml_f_EM)[::-1]
             # Otherwise determine order from samples_f
             else:
+                print("np.mean(samples_f, 1)")
+                print(np.mean(samples_f, 1))
                 subtype_order = np.argsort(np.mean(samples_f, 1))[::-1]
+                print("subtype_order")
+                print(subtype_order)
+            print("subtype_order = ", subtype_order)
         # Unravel the stage scores from score_vals
         stage_score = score_vals.T.flatten()
+        if verbose > 0: print("stage score before subsetting = ")
+        if verbose > 0: print(stage_score)
         IX_select = np.nonzero(stage_score)[0]
         stage_score = stage_score[IX_select][None, :]
+        if verbose > 0: print("stage score after subsetting = ")
+        if verbose > 0: print(stage_score)
         # Get the scores and their number
         num_scores = np.unique(stage_score)
+        if verbose > 0: print("num_scores =")
+        if verbose > 0: print(num_scores)
         N_z = len(num_scores)
         # Extract which biomarkers have which zscores/stages
         stage_biomarker_index = np.tile(np.arange(N_bio), (N_z,))
         stage_biomarker_index = stage_biomarker_index[IX_select]
+        if verbose > 0: print("stage_biomarker_index = ")
+        if verbose > 0: print(stage_biomarker_index)
         # Warn user of reordering if labels and order given
         if biomarker_labels is not None and biomarker_order is not None:
             warnings.warn(
@@ -552,8 +569,10 @@ class OrdinalSustain(AbstractSustain):
                 if i not in range(N_S):
                     ax.set_axis_off()
                     continue
-
+                if verbose > 0: print("i = ", i)
+                if verbose > 0: print("subtype_order[i] = ", subtype_order[i])
                 this_samples_sequence = samples_sequence[subtype_order[i],:,:].T
+                if verbose > 0: print("this_samples_sequence = ", this_samples_sequence)
                 N = this_samples_sequence.shape[1]
 
                 # Construct confusion matrix (vectorized)
@@ -561,34 +580,56 @@ class OrdinalSustain(AbstractSustain):
                 # Sum each time it was observed at that point in the sequence
                 # And normalize for number of samples/sequences
                 confus_matrix = (this_samples_sequence==np.arange(N)[:, None, None]).sum(1) / this_samples_sequence.shape[0]
-
+                if verbose > 0: print("confus_matrix.shape")
+                if verbose > 0: print(confus_matrix.shape)
                 # Define the confusion matrix to insert the colours
                 # Use 1s to start with all white
                 confus_matrix_c = np.ones((N_bio, N, 3))
-
+                if verbose > 0: print("confus matrix c shape:")
+                if verbose > 0: print(confus_matrix_c.shape)
                 # Loop over each z-score event
+                if verbose > 0: print("num_scores = ", num_scores)
+                if verbose > 0: print("stage score dims = ", stage_score.shape)
+                if verbose > 0: print("stage score = ", stage_score)
                 for j, z in enumerate(num_scores):
                     # Determine which colours to alter
                     # I.e. red (1,0,0) means removing green & blue channels
                     # according to the certainty of red (representing z-score 1)
                     alter_level = colour_mat[j] == 0
+                    if verbose > 0: print("alter_level = ", alter_level)
                     # Extract the uncertainties for this score
+                    if verbose > 0: print("j,z = ", j, z)
                     confus_matrix_score = confus_matrix[(stage_score==z)[0]]
+                    if verbose > 0: print("confus_matrix_score shape")
+                    if verbose > 0: print(confus_matrix_score.shape)
                     # Subtract the certainty for this colour
-                    confus_matrix_c[
-                        np.ix_(
+                    if verbose > 0: 
+                        print("first subtraction")
+                        print("(stage_score==z).sum() = ", (stage_score==z).sum())
+                        print("stage_biomarker_index[(stage_score==z)[0]]")
+                        print(stage_biomarker_index[(stage_score==z)[0]])
+                    
+                    index1 = np.ix_(
                             stage_biomarker_index[(stage_score==z)[0]], range(N),
                             alter_level
                         )
-                    ] -= np.tile(
+                    #if verbose > 0: print("index1 = ", index1.shape)
+                    subtractand1 = np.tile(
                         confus_matrix_score.reshape((stage_score==z).sum(), N, 1),
                         (1, 1, alter_level.sum())
                     )
-                    # Subtract the certainty for this colour
-                    confus_matrix_c[:, :, alter_level] -= np.tile(
-                        confus_matrix_score.reshape(N_bio, N, 1),
-                        (1, 1, alter_level.sum())
-                    )
+                    if verbose > 0: print("subtractand1 = ", subtractand1.shape)
+                    confus_matrix_c[index1] -= subtractand1
+                    
+                    ## Subtract the certainty for this colour
+                    # if verbose > 0: print("second subtraction")
+                    # subtractand2 = np.tile(
+                    #    confus_matrix_score.reshape(N_bio, N, 1),
+                    #    (1, 1, alter_level.sum())
+                    # )
+                    # if verbose > 0: print("subtractand2 = ", subtractand2.shape)
+                    # confus_matrix_c[:, :, alter_level] -= subtractand2
+
                 if subtype_titles is not None:
                     title_i = subtype_titles[i]
                 else:

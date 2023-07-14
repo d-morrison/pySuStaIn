@@ -1,0 +1,4 @@
+conda create --name ordinalsustainexample2022 python=3.8
+conda activate ordinalsustainexample2022
+conda install -y ipython jupyter matplotlib statsmodels numpy pandas scipy seaborn pip openpyxl
+pip install git+https://github.com/ucl-pond/pySuStaIn
