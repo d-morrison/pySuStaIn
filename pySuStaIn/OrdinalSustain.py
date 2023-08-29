@@ -579,6 +579,7 @@ class OrdinalSustain(AbstractSustain):
                 # We compare `this_samples_sequence` against each position
                 # Sum each time it was observed at that point in the sequence
                 # And normalize for number of samples/sequences
+                # test case: this_samples_sequence = np.array([[0,2,4,6,8,9,7,5,3,1],[0,1,2,3,4,5,6,7,8,9]])
                 confus_matrix = (this_samples_sequence==np.arange(N)[:, None, None]).sum(1) / this_samples_sequence.shape[0]
                 if verbose > 0: print("confus_matrix.shape")
                 if verbose > 0: print(confus_matrix.shape)
