@@ -331,7 +331,7 @@ class AbstractSustain(ABC):
 
                     samples_likelihood_subj_test = self._evaluate_likelihood_setofsamples(sustainData_test, samples_sequence, samples_f)
 
-                    mean_likelihood_subj_test    = np.mean(samples_likelihood_subj_test,axis=1)
+                    mean_likelihood_subj_test    = np.mean(samples_likelihood_subj_test,axis=1) # expectation over posterior dist of sequence
 
                     ml_sequence_prev_EM         = ml_sequence_EM
                     ml_f_prev_EM                = ml_f_EM
