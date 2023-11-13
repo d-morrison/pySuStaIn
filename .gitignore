@@ -146,8 +146,6 @@ dmypy.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 .DS_Store
-notebooks/sim/pickle_files/sim_subtype2.pickle
 *.pickle
 *.png
 *.npy
-notebooks/2022_OrdinalSuStaInExample.zip
